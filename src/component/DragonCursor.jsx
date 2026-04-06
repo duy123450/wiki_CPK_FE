@@ -208,7 +208,7 @@ export default function DragonCursor() {
       <Seg
         pos={renderSegs[0]}
         flipped={flips[0]}
-        src={`../../public/yaccho_b64.png`}
+        src={`../assets/yaccho_b64.png`}
         alt="Yaccho"
         shadow="0 4px 16px rgba(100,160,255,0.5)"
         zIndex={9999}
