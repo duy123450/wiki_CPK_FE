@@ -150,10 +150,10 @@ export default function HeroPage() {
                 Explore Wiki
               </Link>
               <Link
-                to="/wiki/movie-overview"
+                to="/wiki/chou-kaguya-hime-overview"
                 className="hero-btn hero-btn-secondary"
               >
-                Movie Info
+                Movie   Info
               </Link>
             </div>
           </>
