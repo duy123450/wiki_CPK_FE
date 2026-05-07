@@ -19,19 +19,26 @@ import {
   Shield,
 } from "lucide-react";
 import { getSidebar } from "../services/api";
-import LiveUserCount from "./LiveUserCount";
 import "../styles/Sidebar.css";
 
 const LOGO_URL =
   "https://res.cloudinary.com/dvlaoxjzi/image/upload/q_auto/f_auto/v1775613442/661386943_1497013225103051_5810917340196605647_n_ta4cju.jpg";
-const OPEN_CATEGORY_COOKIE = import.meta.env.VITE_OPEN_CATEGORY_COOKIE || "cpkSidebarOpenCategory";
+const MOVIE_EXTERNAL_LINKS = [
+  {
+    title: "Xem Phim",
+    url: "https://animevietsub.bz/phim/kaguya-cong-chua-vu-tru-a5875/xem-phim-111317.html",
+  },
+  {
+    title: "Đọc Light Novel",
+    url: "https://ln.hako.vn/truyen/24840-kaguya-cong-chua-vu-tru",
+  },
+];
+const OPEN_CATEGORY_COOKIE = "cpkSidebarOpenCategory";
 
 function getCookie(name) {
   const cookies = document.cookie ? document.cookie.split("; ") : [];
   const target = cookies.find((entry) => entry.startsWith(`${name}=`));
-  return target
-    ? decodeURIComponent(target.split("=").slice(1).join("="))
-    : null;
+  return target ? decodeURIComponent(target.split("=").slice(1).join("=")) : null;
 }
 
 function setCookie(name, value, maxAgeSeconds = 60 * 60 * 24 * 30) {
@@ -54,11 +61,13 @@ function CategoryItem({
   category,
   activePage,
   onPageSelect,
+  onExternalLinkClick,
   isOpen,
   onToggle,
 }) {
   const Icon = ICON_MAP[category.icon] || BookOpen;
   const hasActivePage = category.pages?.some((p) => p.slug === activePage);
+  const hasMovieLinks = category.slug === "movie";
 
   return (
     <div className={`category-item ${hasActivePage ? "has-active" : ""}`}>
@@ -89,6 +98,20 @@ function CategoryItem({
               {page.title}
             </button>
           ))}
+          {hasMovieLinks &&
+            MOVIE_EXTERNAL_LINKS.map((link) => (
+              <a
+                key={link.url}
+                className="page-link external-page-link"
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => onExternalLinkClick(category.slug)}
+              >
+                <span className="page-dot" />
+                {link.title}
+              </a>
+            ))}
         </div>
       </div>
     </div>
@@ -100,6 +123,7 @@ const DEFAULT_AVATAR =
 
 export default function Sidebar({
   onCollapseChange,
+  onDragonCursorToggle,
   dragonCursorEnabled,
   currentUser,
   onLogout,
@@ -149,6 +173,14 @@ export default function Sidebar({
     } else {
       navigate(`/wiki/${pageSlug}`);
     }
+  };
+
+  const handleExternalLinkClick = (categorySlug) => {
+    if (categorySlug) {
+      setCookie(OPEN_CATEGORY_COOKIE, categorySlug);
+      setOpenCategorySlug(categorySlug);
+    }
+    applyCollapsedState(true);
   };
 
   useEffect(() => {
@@ -266,12 +298,6 @@ export default function Sidebar({
           <span>Navigation</span>
         </div>
 
-        {!isCollapsed && (
-          <div style={{ paddingBottom: "12px" }}>
-            <LiveUserCount />
-          </div>
-        )}
-
         <nav className="sidebar-nav">
           {loading ? (
             <div style={{ padding: "16px", color: "#999", fontSize: "14px" }}>
@@ -288,6 +314,7 @@ export default function Sidebar({
                   category={category}
                   activePage={activePage}
                   onPageSelect={handlePageSelect}
+                  onExternalLinkClick={handleExternalLinkClick}
                   isOpen={openCategorySlug === category.slug}
                   onToggle={handleCategoryToggle}
                 />
@@ -381,18 +408,7 @@ export default function Sidebar({
           <div className="sidebar-footer-row">
             <button
               className={`dragon-toggle-btn ${dragonCursorEnabled ? "active" : ""}`}
-              onClick={() => {
-                console.log(
-                  "clicked, window.toggleDragonCursor exists?",
-                  typeof window.toggleDragonCursor,
-                );
-                if (
-                  typeof window !== "undefined" &&
-                  window.toggleDragonCursor
-                ) {
-                  window.toggleDragonCursor();
-                }
-              }}
+              onClick={onDragonCursorToggle}
               title={
                 dragonCursorEnabled
                   ? "Disable dragon cursor"
