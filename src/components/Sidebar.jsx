@@ -19,16 +19,19 @@ import {
   Shield,
 } from "lucide-react";
 import { getSidebar } from "../services/api";
+import LiveUserCount from "./LiveUserCount";
 import "../styles/Sidebar.css";
 
 const LOGO_URL =
   "https://res.cloudinary.com/dvlaoxjzi/image/upload/q_auto/f_auto/v1775613442/661386943_1497013225103051_5810917340196605647_n_ta4cju.jpg";
-const OPEN_CATEGORY_COOKIE = "cpkSidebarOpenCategory";
+const OPEN_CATEGORY_COOKIE = import.meta.env.VITE_OPEN_CATEGORY_COOKIE || "cpkSidebarOpenCategory";
 
 function getCookie(name) {
   const cookies = document.cookie ? document.cookie.split("; ") : [];
   const target = cookies.find((entry) => entry.startsWith(`${name}=`));
-  return target ? decodeURIComponent(target.split("=").slice(1).join("=")) : null;
+  return target
+    ? decodeURIComponent(target.split("=").slice(1).join("="))
+    : null;
 }
 
 function setCookie(name, value, maxAgeSeconds = 60 * 60 * 24 * 30) {
@@ -262,6 +265,12 @@ export default function Sidebar({
         <div className="wiki-label">
           <span>Navigation</span>
         </div>
+
+        {!isCollapsed && (
+          <div style={{ paddingBottom: "12px" }}>
+            <LiveUserCount />
+          </div>
+        )}
 
         <nav className="sidebar-nav">
           {loading ? (
