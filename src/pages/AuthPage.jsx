@@ -4,15 +4,10 @@ import { Eye, EyeOff } from "lucide-react";
 import { loginUser, registerUser, uploadAvatar } from "../services/api";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 import TwitterLoginButton from "../components/TwitterLoginButton";
+import DiscordLoginButton from "../components/DiscordLoginButton";
 import "../styles/AuthPage.css";
 
-const INITIAL_FORM = {
-  username: "",
-  email: "", // register mode
-  identifier: "", // login mode
-  password: "",
-  confirmPassword: "", // register mode
-};
+import { INITIAL_FORM } from "../constants/auth.constants";
 
 export default function AuthPage({
   sidebarCollapsed,
@@ -40,6 +35,8 @@ export default function AuthPage({
   const oauthUser = searchParams.get("user");
   const googleError = searchParams.get("googleError");
   const twitterError = searchParams.get("twitterError");
+  const discordError = searchParams.get("discordError");
+  const socialError = searchParams.get("error");
 
   useEffect(() => {
     if (accessToken && oauthUser) {
@@ -56,6 +53,12 @@ export default function AuthPage({
       return;
     }
 
+    if (socialError === "social_conflict") {
+      setError("This email is already associated with another login method. Please use your original login.");
+      navigate("/auth", { replace: true });
+      return;
+    }
+
     if (googleError) {
       setError("Google sign-in was cancelled or failed.");
       navigate("/auth", { replace: true });
@@ -65,10 +68,17 @@ export default function AuthPage({
       setError("X sign-in was cancelled or failed.");
       navigate("/auth", { replace: true });
     }
+
+    if (discordError) {
+      setError("Discord sign-in was cancelled or failed.");
+      navigate("/auth", { replace: true });
+    }
   }, [
     accessToken,
     googleError,
     twitterError,
+    discordError,
+    socialError,
     oauthUser,
     navigate,
     onAuthSuccess,
@@ -410,6 +420,7 @@ export default function AuthPage({
           <div className="auth-google-wrap">
             <GoogleLoginButton />
             <TwitterLoginButton />
+            <DiscordLoginButton />
           </div>
         </form>
       </div>

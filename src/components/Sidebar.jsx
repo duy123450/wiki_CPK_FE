@@ -4,13 +4,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
   BookOpen,
-  Music,
-  Users,
-  Film,
-  Scroll,
-  Star,
-  Map,
-  Sparkles,
   Wand2,
   LogIn,
   LogOut,
@@ -18,13 +11,12 @@ import {
   Bookmark,
   Shield,
 } from "lucide-react";
+import { ICON_MAP, LOGO_URL, DEFAULT_AVATAR, OPEN_CATEGORY_COOKIE as DEFAULT_COOKIE } from "../constants";
 import { getSidebar } from "../services/api";
 import LiveUserCount from "./LiveUserCount";
 import "../styles/Sidebar.css";
 
-const LOGO_URL =
-  "https://res.cloudinary.com/dvlaoxjzi/image/upload/q_auto/f_auto/v1775613442/661386943_1497013225103051_5810917340196605647_n_ta4cju.jpg";
-const OPEN_CATEGORY_COOKIE = import.meta.env.VITE_OPEN_CATEGORY_COOKIE || "cpkSidebarOpenCategory";
+const OPEN_CATEGORY_COOKIE = import.meta.env.VITE_OPEN_CATEGORY_COOKIE || DEFAULT_COOKIE;
 
 function getCookie(name) {
   const cookies = document.cookie ? document.cookie.split("; ") : [];
@@ -38,17 +30,7 @@ function setCookie(name, value, maxAgeSeconds = 60 * 60 * 24 * 30) {
   document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`;
 }
 
-const ICON_MAP = {
-  users: Users,
-  music: Music,
-  film: Film,
-  "book-open": BookOpen,
-  scroll: Scroll,
-  star: Star,
-  map: Map,
-  sparkles: Sparkles,
-  "file-text": BookOpen,
-};
+
 
 function CategoryItem({
   category,
@@ -95,8 +77,7 @@ function CategoryItem({
   );
 }
 
-const DEFAULT_AVATAR =
-  "https://res.cloudinary.com/dvlaoxjzi/image/upload/v1775612971/default-avatar-photo-placeholder-profile-icon-vector_c0iz1k.webp";
+// Placeholder for avatar if none provided
 
 export default function Sidebar({
   onCollapseChange,

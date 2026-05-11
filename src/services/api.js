@@ -1,13 +1,12 @@
 import axios from "axios";
+import { AUTH_TOKEN_KEY as DEFAULT_TOKEN, API_BASE_URL as DEFAULT_URL, ACCESS_TOKEN_UPDATED_EVENT } from "../constants";
 
-export const AUTH_TOKEN_KEY = import.meta.env.VITE_AUTH_TOKEN_KEY || "sukaBlyatToken";
-export const API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "https://wiki-cpk-be.onrender.com/api/v1/wiki";
-export const ACCESS_TOKEN_UPDATED_EVENT = "wiki-cpk:access-token-updated";
+export const AUTH_TOKEN_KEY = import.meta.env.VITE_AUTH_TOKEN_KEY || DEFAULT_TOKEN;
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_URL;
 
 const redirectToLogin = () => {
     window.localStorage.removeItem(AUTH_TOKEN_KEY);
-    window.location.assign("/login");
+    window.location.assign("/auth");
 };
 
 const saveAccessToken = (accessToken) => {
@@ -150,4 +149,10 @@ export const getGoogleLoginUrl = () => {
 
 export const getTwitterLoginUrl = () => {
     return `${API_BASE_URL}/auth/x`;
+};
+
+// ─── Discord OAuth ──────────────────────────────────────────────────────
+
+export const getDiscordLoginUrl = () => {
+    return `${API_BASE_URL}/auth/discord`;
 };

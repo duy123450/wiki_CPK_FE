@@ -1,35 +1,14 @@
 /* eslint-disable react-hooks/purity */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { getMovieInfo } from "../services/api";
+import useMovieInfo from "../hooks/useMovieInfo";
 import "../styles/HeroPage.css";
 
-// ─── fetch hook ───────────────────────────────────────────────────────────────
-function useMovieInfo() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    getMovieInfo()
-      .then((movie) => setData(movie))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  return { data, loading, error };
-}
+import { generateStars } from "../utils/uiUtils";
 
 // ─── stars ────────────────────────────────────────────────────────────────────
 function Stars() {
-  const stars = Array.from({ length: 60 }, (_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    size: Math.random() * 2.5 + 0.5,
-    delay: `${Math.random() * 6}s`,
-    dur: `${Math.random() * 4 + 3}s`,
-  }));
+  const [stars] = useState(() => generateStars(60));
 
   return (
     <div className="hero-stars" aria-hidden="true">

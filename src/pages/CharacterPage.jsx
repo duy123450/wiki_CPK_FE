@@ -1,107 +1,19 @@
 /* eslint-disable react-hooks/purity */
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { ROLE_COLORS } from "../constants";
 import "../styles/CharacterPage.css";
-import { getCharacterBySlug } from "../services/api";
 
-// ─── Helper: name → slug (matches server-side logic) ────────────────────────
-const nameToSlug = (name) =>
-  name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+import { getAppearance } from "../utils/characterUtils";
+import { generateParticles } from "../utils/uiUtils";
+import { useCharacter } from "../hooks/useCharacter";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-// Normalize ability effects: seed has BOTH "effect" and "effects" as field names
-const getEffects = (ability) => ability.effect ?? ability.effects ?? [];
-
-// Normalize appearance: seed uses real_world / tsukuyomi_avatar
-// model schema uses realWorld / tsukuyomi — handle both
-const getAppearance = (appearance) => {
-  if (!appearance) return null;
-  return {
-    realWorld: appearance.realWorld ?? appearance.real_world ?? null,
-    tsukuyomi: appearance.tsukuyomi ?? appearance.tsukuyomi_avatar ?? null,
-  };
-};
-
-// ─── Image switcher ───────────────────────────────────────────────────────────
-const IMAGE_LABELS = ["Real World", "Tsukuyomi", "Alt", "Other"];
-
-function ImageSwitcher({ images }) {
-  const [active, setActive] = useState(0);
-  const [fading, setFading] = useState(false);
-  const timerRef = useRef(null);
-
-  const switchTo = useCallback(
-    (idx) => {
-      if (idx === active || fading) return;
-      setFading(true);
-      clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
-        setActive(idx);
-        setFading(false);
-      }, 260);
-    },
-    [active, fading],
-  );
-
-  useEffect(() => () => clearTimeout(timerRef.current), []);
-
-  if (!images || images.length === 0) {
-    return (
-      <div className="chr-img-placeholder">
-        <span className="chr-img-placeholder-glyph">✦</span>
-      </div>
-    );
-  }
-
-  const single = images.length === 1;
-
-  return (
-    <div className="chr-img-block">
-      <div className="chr-img-frame">
-        <div className="chr-img-corner chr-img-corner--tl" />
-        <div className="chr-img-corner chr-img-corner--tr" />
-        <div className="chr-img-corner chr-img-corner--bl" />
-        <div className="chr-img-corner chr-img-corner--br" />
-        <img
-          key={active}
-          src={images[active].url}
-          alt={`character view ${active + 1}`}
-          className={`chr-img-main ${fading ? "chr-img-fade-out" : "chr-img-fade-in"}`}
-        />
-        <div className="chr-img-reflection" />
-      </div>
-
-      {!single && (
-        <div className="chr-img-switcher">
-          {images.map((_, i) => (
-            <button
-              key={i}
-              className={`chr-switch-btn ${i === active ? "chr-switch-btn--active" : ""}`}
-              onClick={() => switchTo(i)}
-              aria-label={IMAGE_LABELS[i] ?? `View ${i + 1}`}
-            >
-              <span className="chr-switch-label">
-                {IMAGE_LABELS[i] ?? `View ${i + 1}`}
-              </span>
-              <span className="chr-switch-glow" />
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+// Components
+import AbilityCard from "../components/Character/AbilityCard";
+import RelChip from "../components/Character/RelChip";
+import ImageSwitcher from "../components/Character/ImageSwitcher";
 
 // ─── Role badge ───────────────────────────────────────────────────────────────
-const ROLE_COLORS = {
-  Protagonist: "var(--chr-gold)",
-  Supporting: "var(--chr-teal)",
-  Antagonist: "var(--chr-rose)",
-  Cameo: "var(--chr-muted)",
-};
 
 function RoleBadge({ role }) {
   return (
@@ -141,88 +53,6 @@ function SectionCard({ title, ornamentColor, children }) {
   );
 }
 
-// ─── Ability card ─────────────────────────────────────────────────────────────
-const ABILITY_TYPE_COLORS = {
-  Passive: "var(--chr-teal)",
-  Active: "var(--chr-purple)",
-  Ultimate: "var(--chr-gold)",
-  Debuff: "var(--chr-rose)",
-};
-
-function AbilityCard({ ability }) {
-  const effects = getEffects(ability);
-  return (
-    <div className="chr-ability-card">
-      <div className="chr-ability-head">
-        <span className="chr-ability-name">{ability.skillName}</span>
-        {ability.type && (
-          <span
-            className="chr-ability-type"
-            style={{
-              "--atype-color":
-                ABILITY_TYPE_COLORS[ability.type] ?? "var(--chr-muted)",
-            }}
-          >
-            {ability.type}
-          </span>
-        )}
-      </div>
-      {effects.length > 0 && (
-        <ul className="chr-ability-effects">
-          {effects.map((e, i) => (
-            <li key={i}>{e}</li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-// ─── Relationship chip ────────────────────────────────────────────────────────
-function RelChip({ rel }) {
-  // A populated targetId is an object with a "name" field.
-  // A raw (un-populated) ObjectId comes back as a string or an object without
-  // "name" — in both cases we fall back to null so the UI shows "Unknown".
-  const target =
-    rel.targetId && typeof rel.targetId === "object" && rel.targetId.name
-      ? rel.targetId
-      : null;
-
-  const targetSlug = target ? nameToSlug(target.name) : null;
-
-  return (
-    <Link
-      to={targetSlug ? `/wiki/characters/${targetSlug}` : "#"}
-      style={{ textDecoration: "none", color: "inherit" }}
-      className={target ? "chr-rel-chip-link" : ""}
-    >
-      <div className="chr-rel-chip">
-        {/* Avatar */}
-        {target?.image?.[0]?.url ? (
-          <img
-            src={target.image[0].url}
-            alt={target.name}
-            className="chr-rel-avatar"
-          />
-        ) : (
-          <div className="chr-rel-avatar chr-rel-avatar--placeholder">✦</div>
-        )}
-
-        {/* Info */}
-        <div className="chr-rel-info">
-          <span className="chr-rel-name">{target?.name ?? "Unknown"}</span>
-          {rel.relationType && (
-            <span className="chr-rel-type">{rel.relationType}</span>
-          )}
-          {rel.description && (
-            <span className="chr-rel-desc">{rel.description}</span>
-          )}
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 // ─── Shimmer skeleton ─────────────────────────────────────────────────────────
 function Skeleton() {
   return (
@@ -239,14 +69,7 @@ function Skeleton() {
 
 // ─── Floating particles ───────────────────────────────────────────────────────
 function Particles() {
-  const pts = Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    size: Math.random() * 2.5 + 0.8,
-    delay: `${Math.random() * 8}s`,
-    dur: `${Math.random() * 5 + 4}s`,
-  }));
+  const [pts] = useState(() => generateParticles(30));
   return (
     <div className="chr-particles" aria-hidden="true">
       {pts.map((p) => (
@@ -270,16 +93,7 @@ function Particles() {
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function CharacterPage({ sidebarCollapsed }) {
   const { slug } = useParams();
-  const [character, setCharacter] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    getCharacterBySlug(slug)
-      .then(setCharacter)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [slug]);
+  const { character, loading, error } = useCharacter(slug);
 
   const c = character;
   const appearance = c ? getAppearance(c.description?.appearance) : null;
@@ -422,3 +236,4 @@ export default function CharacterPage({ sidebarCollapsed }) {
     </main>
   );
 }
+
